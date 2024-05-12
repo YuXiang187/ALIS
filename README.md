@@ -30,8 +30,6 @@ STA探测端预览（已焊接）：
 
 ## AP控制端
 
-![ap](./assets/ap.jpg)
-
 ESP8266 AP端代码：
 
 ```c++
@@ -48,7 +46,6 @@ char readdata[512];
 WiFiUDP Udp;
 // IO
 int stateLed = D4;
-int led = D1;
 int switchBtn = D2;
 int sendBtn = D5;
 // Other
@@ -56,11 +53,10 @@ Ticker t;
 int switchBtnState = HIGH;
 int sendBtnState = HIGH;
 int id = 0;
+bool isOpen = false;
 
 void init_IO()
 {
-  pinMode(led, OUTPUT);
-  digitalWrite(led, 0);
   pinMode(stateLed, OUTPUT);
   digitalWrite(stateLed, 1);
   pinMode(switchBtn, INPUT_PULLUP);
@@ -105,23 +101,23 @@ void Udp_Handler(String data)
   {
     if (data == "on10")
     {
-      if (digitalRead(stateLed) == LOW)
+      if (isOpen == true)
       {
         id = 10;
-        digitalWrite(led, 1);
+        digitalWrite(stateLed, HIGH);
       }
     }
     else if (data == "on11")
     {
-      if (digitalRead(stateLed) == LOW)
+      if (isOpen == true)
       {
         id = 11;
-        digitalWrite(led, 1);
+        digitalWrite(stateLed, HIGH);
       }
     }
     else if (data == "off")
     {
-      digitalWrite(led, 0);
+      digitalWrite(stateLed, LOW);
     }
     else if (data == "pc")
     {
@@ -188,10 +184,20 @@ void loop()
     switchBtnState = switchBtnVal;
     if (switchBtnVal == LOW)
     {
-      digitalWrite(stateLed, !digitalRead(stateLed));
-      if (digitalRead(stateLed) == HIGH)
+      isOpen = !isOpen;
+      if (isOpen == false)
       {
-        digitalWrite(D1, LOW);
+        for (int i = 0; i < 5; i++)
+        {
+          digitalWrite(stateLed, !digitalRead(stateLed));
+          delay(400);
+        }
+      }
+      else
+      {
+        digitalWrite(stateLed, HIGH);
+        delay(1500);
+        digitalWrite(stateLed, LOW);
       }
     }
   }
@@ -203,8 +209,6 @@ void loop()
 ```
 
 ## STA探测端
-
-![sta](./assets/sta.jpg)
 
 ESP8266 STA端代码（更改192.168.1.10和on10以便连接其他设备）：
 
