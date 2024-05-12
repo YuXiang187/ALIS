@@ -185,19 +185,21 @@ void loop()
     if (switchBtnVal == LOW)
     {
       isOpen = !isOpen;
-      if (isOpen == false)
-      {
-        for (int i = 0; i < 5; i++)
-        {
-          digitalWrite(stateLed, !digitalRead(stateLed));
-          delay(400);
-        }
-      }
-      else
+      if (isOpen == true)
       {
         digitalWrite(stateLed, HIGH);
         delay(1500);
         digitalWrite(stateLed, LOW);
+      }
+      else
+      {
+        for (int i = 0; i < 5; i++)
+        {
+          digitalWrite(stateLed, HIGH);
+          delay(200);
+          digitalWrite(stateLed, LOW);
+          delay(200);
+        }
       }
     }
   }
