@@ -55,16 +55,14 @@ int sendBtnState = HIGH;
 int id = 0;
 bool isOpen = false;
 
-void init_IO()
-{
+void init_IO() {
   pinMode(stateLed, OUTPUT);
-  digitalWrite(stateLed, 1);
+  digitalWrite(stateLed, HIGH);
   pinMode(switchBtn, INPUT_PULLUP);
   pinMode(sendBtn, INPUT_PULLUP);
 }
 
-void init_AP()
-{
+void init_AP() {
   WiFi.mode(WIFI_AP);
   WiFi.softAP(ssid, password);
   // IP: 192.168.1.1
@@ -77,17 +75,14 @@ void init_AP()
 }
 
 // 接收数据，返回String
-String Read_Udp()
-{
+String Read_Udp() {
   String data = "";
   int packetSize = Udp.parsePacket();
-  if (packetSize)
-  {
+  if (packetSize) {
     memset(readdata, 0x00, sizeof(readdata));
     Udp.read(readdata, 511);
     Udp.flush();
-    for (int i = 0; i < packetSize; i++)
-    {
+    for (int i = 0; i < packetSize; i++) {
       data += readdata[i];
     }
   }
@@ -95,34 +90,22 @@ String Read_Udp()
 }
 
 // 处理接收到的数据
-void Udp_Handler(String data)
-{
-  if (data != "")
-  {
-    if (data == "on10")
-    {
-      if (isOpen == true)
-      {
+void Udp_Handler(String data) {
+  if (data != "") {
+    if (data == "on10") {
+      if (isOpen == true) {
         id = 10;
-        digitalWrite(stateLed, HIGH);
+        digitalWrite(stateLed, LOW);
       }
-    }
-    else if (data == "on11")
-    {
-      if (isOpen == true)
-      {
+    } else if (data == "on11") {
+      if (isOpen == true) {
         id = 11;
-        digitalWrite(stateLed, HIGH);
+        digitalWrite(stateLed, LOW);
       }
-    }
-    else if (data == "off")
-    {
-      digitalWrite(stateLed, LOW);
-    }
-    else if (data == "pc")
-    {
-      for (int i = 0; i <= 5; i++)
-      {
+    } else if (data == "off") {
+      digitalWrite(stateLed, HIGH);
+    } else if (data == "pc") {
+      for (int i = 0; i <= 5; i++) {
         digitalWrite(stateLed, !digitalRead(stateLed));
         delay(1000);
       }
@@ -131,80 +114,60 @@ void Udp_Handler(String data)
 }
 
 // 发送数据，data为发送内容
-void sendData(String data)
-{
+void sendData(String data) {
   IPAddress pcClient(192, 168, 1, 100);
   Udp.beginPacket(pcClient, sendPort);
   Udp.print(data);
   Udp.endPacket();
 }
 
-void sendWarning()
-{
-  if (id == 10)
-  {
+void sendWarning() {
+  if (id == 10) {
     sendData("warn10");
-  }
-  else if (id == 11)
-  {
+  } else if (id == 11) {
     sendData("warn11");
-  }
-  else
-  {
+  } else {
     sendData("warn");
   }
 }
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
   init_IO();
   init_AP();
   Udp.begin(readPort);
 }
 
-void loop()
-{
+void loop() {
   int sendBtnVal = digitalRead(sendBtn);
-  if (sendBtnVal != sendBtnState)
-  {
+  if (sendBtnVal != sendBtnState) {
     sendBtnState = sendBtnVal;
-    if (sendBtnVal == LOW)
-    {
+    if (sendBtnVal == LOW) {
       t.attach_ms(1500, sendWarning);
-    }
-    else
-    {
+    } else {
       t.detach();
     }
   }
   int switchBtnVal = digitalRead(switchBtn);
-  if (switchBtnVal != switchBtnState)
-  {
+  if (switchBtnVal != switchBtnState) {
     switchBtnState = switchBtnVal;
-    if (switchBtnVal == LOW)
-    {
+    if (switchBtnVal == LOW) {
       isOpen = !isOpen;
-      if (isOpen == true)
-      {
-        digitalWrite(stateLed, HIGH);
-        delay(1500);
+      if (isOpen == true) {
         digitalWrite(stateLed, LOW);
-      }
-      else
-      {
-        for (int i = 0; i < 5; i++)
-        {
-          digitalWrite(stateLed, HIGH);
-          delay(200);
+        delay(1500);
+        digitalWrite(stateLed, HIGH);
+      } else {
+        for (int i = 0; i < 5; i++) {
           digitalWrite(stateLed, LOW);
+          delay(200);
+          digitalWrite(stateLed, HIGH);
           delay(200);
         }
       }
     }
   }
-  if (WiFi.softAPgetStationNum() != 0)
-  {
+  if (WiFi.softAPgetStationNum() != 0) {
     Udp_Handler(Read_Udp());
   }
 }
